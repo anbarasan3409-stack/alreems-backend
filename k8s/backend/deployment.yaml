@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alreems-backend
+  labels:
+    app: alreems-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alreems-backend
+  template:
+    metadata:
+      labels:
+        app: alreems-backend
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: backend
+          image: backend-image
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          envFrom:
+            - secretRef:
+                name: alreems-backend-env
+          volumeMounts:
+            - name: backend-uploads
+              mountPath: /app/uploads
+      volumes:
+        - name: backend-uploads
+          persistentVolumeClaim:
+            claimName: alreems-backend-pvc
