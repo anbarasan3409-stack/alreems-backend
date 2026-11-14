@@ -957,8 +957,8 @@ func CreateTeacher(handler database.Handler) gin.HandlerFunc {
 			PhoneNumber    string `json:"phoneNumber" binding:"required"`
 			Address        string `json:"address"`
 			Department     string `json:"department" binding:"required"`
-			Designation    string `json:"designation" binding:"required"`
-			Subject        string `json:"subject" binding:"required"`
+			Designation    string `json:"designation"`
+			Subject        string `json:"subject"`
 			Qualifications string `json:"qualifications" binding:"required"`
 			Experience     string `json:"experience" binding:"required"`
 			JoiningDate    string `json:"joiningDate" binding:"required"`
@@ -977,10 +977,17 @@ func CreateTeacher(handler database.Handler) gin.HandlerFunc {
 		}
 
 		// Parse joining date
-		joiningDate, err := time.Parse("2006-01-02", teacherData.JoiningDate)
-		if err != nil {
-			ctx.JSON(400, gin.H{"error": "Invalid joining date format. Use YYYY-MM-DD"})
-			return
+		var joiningDate time.Time
+		var err error
+		if teacherData.JoiningDate != "" {
+			joiningDate, err = time.Parse("2006-01-02", teacherData.JoiningDate)
+			if err != nil {
+				joiningDate, err = time.Parse(time.RFC3339, teacherData.JoiningDate)
+				if err != nil {
+					ctx.JSON(400, gin.H{"error": "Invalid joining date format. Use YYYY-MM-DD"})
+					return
+				}
+			}
 		}
 
 		// Create new teacher
@@ -1097,8 +1104,11 @@ func UpdateTeacher(handler database.Handler) gin.HandlerFunc {
 		if updateData.JoiningDate != "" {
 			joiningDate, err := time.Parse("2006-01-02", updateData.JoiningDate)
 			if err != nil {
-				ctx.JSON(400, gin.H{"error": "Invalid joining date format. Use YYYY-MM-DD"})
-				return
+				joiningDate, err = time.Parse(time.RFC3339, updateData.JoiningDate)
+				if err != nil {
+					ctx.JSON(400, gin.H{"error": "Invalid joining date format. Use YYYY-MM-DD"})
+					return
+				}
 			}
 			teacher.JoiningDate = &joiningDate
 		}
